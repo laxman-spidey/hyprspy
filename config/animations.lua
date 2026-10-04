@@ -179,10 +179,17 @@ hl.animation({
 
 -- Workspace switching — slow slide for buttery feel
 hl.animation({
-    leaf = "workspaces",
+    leaf = "workspacesIn",
     enabled = true,
     speed = 6,
     bezier = "menu_decel",
+    style = "slide"
+})
+hl.animation({
+    leaf = "workspacesOut",
+    enabled = true,
+    speed = 5,
+    bezier = "emphasizedAccel",
     style = "slide"
 })
 
