@@ -27,7 +27,13 @@ require("config.animations")
 
 -- See https://wiki.hypr.land/Configuring/Basics/Monitors/
 hl.monitor({
-    output   = "",
+    output   = MONITOR1,
+    mode     = "preferred",
+    position = "auto",
+    scale    = "auto",
+})
+hl.monitor({
+    output   = MONITOR2,
     mode     = "preferred",
     position = "auto",
     scale    = "auto",
