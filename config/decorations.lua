@@ -42,7 +42,7 @@ hl.config({
             enabled      = true,
             range        = 20,
             offset       = {0, 2},
-            render_power = 10,
+            render_power = 4,
             color        = 0xee1a1a1a,
         },
 

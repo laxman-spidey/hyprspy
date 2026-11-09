@@ -9,13 +9,21 @@
 
 hl.monitor({
     output    = MONITOR1,
-    mode      = "preferred",
+    mode      = "2560x1440@165",
     position  = "auto",
-    scale     = "auto",
+    scale     = "1",
     vrr       = 0,
 })
 
 hl.monitor({
     output    = MONITOR2,
+    mode      = "3840x2160@60",
+    position  = "auto",
+    scale     = "1",
     vrr       = 0,
+})
+hl.config({
+    cursor = {
+        no_hardware_cursors = true
+    }
 })
