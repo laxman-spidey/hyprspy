@@ -9,7 +9,7 @@ local error = "rgb(ff5555)"
 local on_error = "rgb(282a36)"
 
 -- HyprGlass tints (hex RRGGBBAA; alpha = strength of the wash)
-local glass_tint = "0xbd93f914" -- faint lavender sheen derived from primary
+local glass_tint = "0xbd93f910" -- faint lavender sheen derived from primary
 
 local function apply_theme()
     hl.config({

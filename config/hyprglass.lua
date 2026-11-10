@@ -1,6 +1,3 @@
--- HyprGlass liquid glass for Noctalia (https://github.com/hyprnux/hyprglass)
--- The plugin is managed by HyprPM; this module loads it and configures the
--- glass for Noctalia's bar, panels and dock. Tints come from noctalia.lua.
 
 local noctalia = require("noctalia")
 
@@ -11,77 +8,91 @@ if not hl.plugin.hyprglass then
     return
 end
 
--- Convert palette hex strings ("0xbd93f914") to the 0xRRGGBBAA numbers
--- HyprGlass expects; tonumber rejects the "0x" prefix with an explicit base.
-local function hex_color(s)
-    return tonumber(string.gsub(s, "^0[xX]", ""), 16)
-end
-
 local hg = hl.plugin.hyprglass
 
--- Global defaults. Windows keep the built-in "glass" preset (opaque windows
--- are skipped automatically); Noctalia's layer surfaces get the presets
--- below instead via per-layer overrides. Tint is intentionally not set
--- globally: each preset carries its own, sourced from the Noctalia palette.
-hg.config({
-    default_theme  = "dark",   -- matches [theme] mode in ~/.config/noctalia
-    default_preset = "glass",
-    brightness     = 1.0,      -- neutral tone mapping (no auto-dim)
-    dark           = { brightness = 1.0 },
-    light          = { adaptive_boost = 0.5 },
-    layers         = { enabled = true },
-})
+local FALLBACK_TINT = "ffffff18"
 
--- Presets -----------------------------------------------------------------
-
--- "noct": signature Noctalia liquid glass for always-visible chrome (bar,
--- panels, dock). A solid glossy slab: strong multi-pass blur, near-opaque
--- material, top-edge specular shine, powerful fresnel edge glow, gentle
--- refraction with subtle fringing and a thin lit bevel.
-hg.preset("noct", {
-    glass_opacity        = 0.9,   -- defined material; content reads as depth behind it
-    blur_strength        = 2.5,   -- ~30px radius (value * 12)
-    blur_iterations      = 2,     -- multi-pass Gaussian for a creamy look
-    specular_strength    = 0.5,   -- top-edge highlight (the iOS signature shine)
-    fresnel_strength     = 1.0,   -- powerful edge glow
-    refraction_strength  = 0.8,   -- noticeable content bending at the edges
-    refraction_flow      = 0.5,   -- balanced pull toward center / along edges
-    chromatic_aberration = 0.4,   -- subtle spectral fringing
-    lens_distortion      = 0.35,  -- gentle center dome magnification
-    bevel_strength       = 0.5,   -- thin lit line along the glass edge
-    contrast             = 1.2,   -- punchier tone mapping keeps text legible
-    tint_color           = hex_color(noctalia.colors.glass_tint),
-})
-
--- "pane": light frost for transient surfaces (notifications, OSD, window
--- switcher) so their text stays readable while feeling like the same glass.
-hg.preset("pane", {
-    inherits      = "subtle",
-    glass_opacity = 0.75,
-    blur_strength = 1.6,
-    tint_color    = hex_color(noctalia.colors.glass_tint),
-})
-
--- Layer surfaces ------------------------------------------------------------
--- Whitelist mode: only the namespaces below get glass; everything else is
--- left untouched (notably noctalia-wallpaper). Namespaces mirror the
--- Noctalia layer rule in config/windowrules.lua.
--- mask_threshold sits above shadow opacity so shadows don't trigger a glass
--- halo around the surface; raise it if you see halos, lower it if parts of
--- a translucent widget stop getting glassed. mask_feather blends the cut so
--- antialiased rounded corners (the bar's bottom radius) stay smooth.
-
-local function glass_layer(namespace, preset)
-    hg.layer(namespace, { preset = preset, mask_threshold = 0.15, mask_feather = 0.2 })
+local function tint(alpha)
+    local s = noctalia.colors and noctalia.colors.glass_tint
+    s = (type(s) == "string") and (s:gsub("^0[xX]", "")) or FALLBACK_TINT
+    if #s ~= 8 then s = FALLBACK_TINT end
+    if alpha then s = s:sub(1, 6) .. string.format("%02x", alpha) end
+    return tonumber(s, 16)
 end
 
--- Always-visible chrome: signature liquid glass
-glass_layer("noctalia-bar-default", "noct")
-glass_layer("noctalia-dock",        "noct")
-glass_layer("noctalia-panel",       "noct")
-glass_layer("noctalia-attached-panel", "noct")
+hg.config({
+    default_theme  = "dark",   -- matches [theme] mode in ~/.config/noctalia
+    default_preset = "apple",  -- windows
+    brightness     = 1.0,
+    dark           = { brightness = 1.0 },
+    light          = { adaptive_boost = 0.5 },
+    layers = {
+        enabled           = true,
+        mask_threshold    = 0.15,  -- keep above shadow opacity to avoid halos
+        mask_feather      = 0.2,   -- smooth antialiased rounded corners
+        -- live_resample_fps = 30,
+    },
+})
 
--- Transient surfaces: light frost for readability
-glass_layer("noctalia-notification",    "pane")
-glass_layer("noctalia-osd",             "pane")
-glass_layer("noctalia-window-switcher", "pane")
+hg.preset("apple", {
+    inherits             = "glass",
+
+    edge_height          = 32,    -- rim bend steepness (20-40)
+    edge_thickness_px    = 20,    -- rim width in px (16-24)
+    fresnel_reflection   = 0.5,
+    chromatic_aberration = 0.3,
+
+    blur_strength        = 0.4,   -- low, heavy blur hides the lens
+    blur_iterations      = 2,
+    lens_distortion      = 0.1,
+    noise_strength       = 0.0,
+
+    fresnel_strength     = 0.5,
+    specular_strength    = 0.8,
+    specular_angle       = 330,
+    bevel_strength       = 0.6,
+    bevel_size           = 2.0,
+    bevel_angle          = 315,
+    bevel_shadow         = 0.35,
+    bevel_tint           = 0.35,
+
+    dark  = { brightness = 0.95, saturation = 1.2, vibrancy = 0.5,
+              tint_color = 0xffffff10, adaptive_dim = 0.5 },
+    light = { brightness = 1.05, saturation = 1.05,
+              tint_color = 0xffffff18, adaptive_boost = 0.2 },
+})
+
+hg.preset("panels", {
+    inherits             = "apple",
+})
+
+hg.preset("pane", {
+    inherits             = "panels",
+})
+
+hg.preset("widgets", {
+    inherits             = "panels",
+    bevel_size           = 1.0,
+    blur_strength        = 0.1,
+    edge_thickness_px    = 10, 
+    edge_height          = 8,
+})
+hg.layer("noctalia-bar-default",     { preset = "panels" })
+hg.layer("noctalia-dock",            { preset = "panels", mask_mode = "contour" })
+hg.layer("noctalia-panel",           { preset = "panels" })
+hg.layer("noctalia-launcher",           { preset = "panels" })
+hg.layer("noctalia-attached-panel",  { preset = "panels" })
+
+hg.layer("noctalia-notification",    { preset = "pane", mask_feather = 0.2 })
+hg.layer("noctalia-osd",             { preset = "widgets", })
+hg.layer("noctalia-window-switcher", { preset = "pane", })
+
+hg.layer("noctalia-desktop-.*",       { preset = "glass", mask_mode = "alpha" })
+hg.layer("noctalia-desktop-widget-sysmon-0000000000000002",       { preset = "widgets"})
+hg.layer("noctalia-desktop-widget-volume-0000000000000003",       { preset = "widgets"})
+hg.layer("noctalia-desktop-widget-media_player-0000000000000004",       { preset = "widgets"})
+hg.layer("noctalia-desktop-widget-sysmon-0000000000000005",       { preset = "widgets"})
+
+
+hl.window_rule({ match = { class = "mpv" },     tag = "+hyprglass_disabled" })
+hl.window_rule({ match = { fullscreen = true }, tag = "+hyprglass_disabled" })
