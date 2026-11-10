@@ -13,3 +13,6 @@ require("config.monitors")
 require("config.windowrules")
 require("config.workspaces")
 require("noctalia").apply_theme()
+
+-- HyprGlass liquid glass for Noctalia (loads the plugin + config)
+require("config.hyprglass")

@@ -8,6 +8,9 @@ local on_secondary = "rgb(4e1d32)"
 local error = "rgb(ff5555)"
 local on_error = "rgb(282a36)"
 
+-- HyprGlass tints (hex RRGGBBAA; alpha = strength of the wash)
+local glass_tint = "0xbd93f914" -- faint lavender sheen derived from primary
+
 local function apply_theme()
     hl.config({
         general = {
@@ -49,6 +52,7 @@ return {
         on_secondary = on_secondary,
         error = error,
         on_error = on_error,
+        glass_tint = glass_tint,
     },
     apply_theme = apply_theme
 }
